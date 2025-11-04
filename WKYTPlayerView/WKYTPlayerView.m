@@ -885,15 +885,24 @@ NSString static *const kWKYTPlayerSyndicationRegexPattern = @"^https://tpc.googl
         NSMutableDictionary *playerVars = [[NSMutableDictionary alloc] init];
         [playerVars addEntriesFromDictionary:[playerParams objectForKey:@"playerVars"]];
         
-        if (![playerVars objectForKey:@"origin"]) {
-            self.originURL = [NSURL URLWithString:@"about:blank"];
-        } else {
-            self.originURL = [NSURL URLWithString: [playerVars objectForKey:@"origin"]];
+        NSString *originString = [playerVars objectForKey:@"origin"];
+        if (!originString || originString.length == 0 ||
+            [originString isEqualToString:@"about:blank"] ||
+            [originString containsString:@"localhost"] ||
+            [originString containsString:@"127.0.0.1"]) {
+            
+            originString = @"https://example.com";
+            [playerVars setObject:originString forKey:@"origin"];
         }
+
+        self.originURL = [NSURL URLWithString:originString];
+        [playerParams setObject:playerVars forKey:@"playerVars"];
+        
     } else {
-        // This must not be empty so we can render a '{}' in the output JSON
         [playerParams setValue:[[NSDictionary alloc] init] forKey:@"playerVars"];
+        self.originURL = [NSURL URLWithString:@"https://example.com"];
     }
+
     
     // Remove the existing webView to reset any state
     [self.webView removeFromSuperview];

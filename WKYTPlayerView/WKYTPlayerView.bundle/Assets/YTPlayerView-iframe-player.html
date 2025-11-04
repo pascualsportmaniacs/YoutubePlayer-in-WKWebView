@@ -41,45 +41,22 @@
     var error = false;
 
     YT.ready(function() {
-        console.log("Custom YTPlayer HTML loaded — begin");
-
-        // Parse config injected by Swift
-        var config = %@;
-        if (typeof config === "string") {
-            try { config = JSON.parse(config); } catch (e) { console.log("YT Config parse error:", e); }
-        }
-
-        // Add required embed_config.client for iOS
-        if (!config.embed_config) {
-            config.embed_config = { "client": "ios" };
-        }
-
-        // Create the player
-        player = new YT.Player('player', config);
-
-        // ✅ Once iframe is created, enforce referrerpolicy attribute
-        player.addEventListener("onReady", function() {
-            var iframe = document.querySelector("iframe");
-            if (iframe) {
-                iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-                console.log("Applied referrerpolicy to iframe:", iframe.getAttribute("referrerpolicy"));
-            }
-        });
-
+        player = new YT.Player('player', %@);
         player.setSize(window.innerWidth, window.innerHeight);
         window.location.href = 'ytplayer://onYouTubeIframeAPIReady';
 
-        // Track time
+        // this will transmit playTime frequently while playng
         function getCurrentTime() {
-            var state = player.getPlayerState();
-            if (state == YT.PlayerState.PLAYING) {
-                var time = player.getCurrentTime();
-                window.location.href = 'ytplayer://onPlayTime?data=' + time;
-            }
+             var state = player.getPlayerState();
+             if (state == YT.PlayerState.PLAYING) {
+                 time = player.getCurrentTime()
+                 window.location.href = 'ytplayer://onPlayTime?data=' + time;
+             }
         }
+        
         window.setInterval(getCurrentTime, 500);
+             
     });
-
 
     function onReady(event) {
         window.location.href = 'ytplayer://onReady?data=' + event.data;
